@@ -1,7 +1,0 @@
----
-mysql_required_libs:
-  - python-mysqldb
-
-mysql_packages:
-  - mysql-common
-  - mariadb-server

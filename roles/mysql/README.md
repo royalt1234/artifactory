@@ -1,155 +1,235 @@
-![Logo](https://raw.githubusercontent.com/idealista/mysql_role/master/logo.gif)
+# Ansible Role: MySQL
 
-# MySQL Ansible role
+[![CI](https://github.com/geerlingguy/ansible-role-mysql/workflows/CI/badge.svg?event=push)](https://github.com/geerlingguy/ansible-role-mysql/actions?query=workflow%3ACI)
 
-[![Build Status](https://travis-ci.com/idealista/mysql_role.png)](https://travis-ci.com/idealista/mysql_role)
-[![Ansible Galaxy](https://img.shields.io/badge/galaxy-idealista.mysql__role-B62682.svg)](https://galaxy.ansible.com/idealista/mysql_role)
+Installs and configures MySQL or MariaDB server on RHEL/CentOS or Debian/Ubuntu servers.
 
-This ansible role installs an Oracle MySQL or MariaDB server in a debian environment.
+## Requirements
 
-- [Getting Started](#getting-started)
-	- [Prerequisities](#prerequisities)
-	- [Installing](#installing)
-- [Usage](#usage)
-- [Testing](#testing)
-- [Built With](#built-with)
-- [Versioning](#versioning)
-- [Authors](#authors)
-- [License](#license)
-- [Contributing](#contributing)
+No special requirements; note that this role requires root access, so either run it in a playbook with a global `become: yes`, or invoke the role in your playbook like:
 
-## Getting Started
-
-These instructions will get you a copy of the role for your Ansible playbook. Once launched, it will install an [MySQL Database](https://www.mysql.com/) or [MariaDB server](https://mariadb.org/) in a Debian system.
-
-### Prerequisities
-
-Ansible 4.0.0 version installed.
-Inventory destination should be a Debian environment.
-
-For testing purposes, [Molecule](https://molecule.readthedocs.io/) with Docker as driver and [Goss](https://goss.rocks/) as verifier.
-
-### Installing
-
-Create or add to your roles dependency file (e.g requirements.yml):
-
-```
-- src: idealista.mysql_role
-  version: 4.1.0
-  name: mysql
-```
-
-Install the role with ansible-galaxy command:
-
-```
-ansible-galaxy install -p roles -r requirements.yml -f
-```
-
-Use in a playbook:
-
-```
----
-- hosts: someserver
+```yaml
+- hosts: database
   roles:
-    - role: mysql
+    - role: geerlingguy.mysql
+      become: yes
 ```
 
-## Usage
+## Role Variables
 
-
-Installation tasks follows the install guide: https://dev.mysql.com/doc/mysql-apt-repo-quick-guide/en/
-
-Look to the [defaults](defaults/main.yml) properties file to see the possible configuration properties.
-
-Set at least mysql_root_user and mysql_root_password:
+Available variables are listed below, along with default values (see `defaults/main.yml`):
 
 ```yaml
-mysql_root_user: mysql         # Change mysql root user
-mysql_root_password: secret    # Change mysql root password
+mysql_user_home: /root
+mysql_user_name: root
+mysql_user_password: root
 ```
 
-Add any number of databases and create users with privs on them
+The home directory inside which Python MySQL settings will be stored, which Ansible will use when connecting to MySQL. This should be the home directory of the user which runs this Ansible role. The `mysql_user_name` and `mysql_user_password` can be set if you are running this role under a non-root user account and want to set a non-root user.
 
 ```yaml
-mysql_databases:
-   - name: example_DB
-     encoding: utf8
-   - name: anotherExample_DB
-
-mysql_users:
-   - name: admin_user
-     host: 127.0.0.1
-     password: secret
-     priv: [ *.*:USAGE ]
-   - name: example_user
-     host: *
-     password: secret
-     priv: [ example_DB.*:ALL ]
+mysql_root_home: /root
+mysql_root_username: root
+mysql_root_password: root
 ```
 
-## Testing
+The MySQL root user account details.
 
-```
-$ pipenv sync
-$ pipenv run molecule test --all
-```
-
-To check the installation, example with Oracle's MySQL implementation:
-
-```bash
-$ pipenv run molecule converge --scenario-name=mysql
-$ pipenv run molecule login --scenario-name=mysql
-
-root@mysql:/# mysql -u root -ptesting
-
-mysql> show databases;
-+--------------------+
-| Database           |
-+--------------------+
-| information_schema |
-| mysql              |
-| test01             |
-| performance_schema |
-+--------------------+
-4 rows in set (0.00 sec)
-```
-
- ## Known Issues
-  There is a problem while trying to remount /run using the role. If you need to assign a new size for mysql use this in your playbook
 ```yaml
-- name: MySQL | Remounting /run
-  shell: mount -t tmpfs tmpfs /run -o remount,size={{ mysql_remount_run_partition_size }}
-  changed_when: false
-  tags:
-    skip_ansible_lint
-  when: mysql_remount_run
+mysql_root_password_update: false
 ```
 
+Whether to force update the MySQL root user's password. By default, this role will only change the root user's password when MySQL is first configured. You can force an update by setting this to `yes`.
 
-## Built With
+> Note: If you get an error like `ERROR 1045 (28000): Access denied for user 'root'@'localhost' (using password: YES)` after a failed or interrupted playbook run, this usually means the root password wasn't originally updated to begin with. Try either removing  the `.my.cnf` file inside the configured `mysql_user_home` or updating it and setting `password=''` (the insecure default password). Run the playbook again, with `mysql_root_password_update` set to `yes`, and the setup should complete.
 
-![Ansible](https://img.shields.io/badge/ansible-4.0.0-green.svg)
-![Molecule](https://img.shields.io/badge/molecule-3.3.2-green.svg)
-![Goss](https://img.shields.io/badge/goss-0.3.16-green.svg)
+> Note: If you get an error like `ERROR 1698 (28000): Access denied for user 'root'@'localhost' (using password: YES)` when trying to log in from the CLI you might need to run as root or sudoer.
 
-## Versioning
+```yaml
+mysql_enabled_on_startup: true
+```
 
-For the versions available, see the [tags on this repository](https://github.com/idealista/mysql_role/tags).
+Whether MySQL should be enabled on startup.
 
-Additionaly you can see what change in each version in the [CHANGELOG.md](CHANGELOG.md) file.
+```yaml
+mysql_config_file: *default value depends on OS*
+mysql_config_include_dir: *default value depends on OS*
+```
 
-## Authors
+The main my.cnf configuration file and include directory.
 
-* **Idealista** - *Work with* - [idealista](https://github.com/idealista)
+```yaml
+overwrite_global_mycnf: true
+```
 
-See also the list of [contributors](https://github.com/idealista/mysql_role/contributors) who participated in this project.
+Whether the global my.cnf should be overwritten each time this role is run. Setting this to `no` tells Ansible to only create the `my.cnf` file if it doesn't exist. This should be left at its default value (`yes`) if you'd like to use this role's variables to configure MySQL.
+
+```yaml
+mysql_config_include_files: []
+```
+
+A list of files that should override the default global my.cnf. Each item in the array requires a "src" parameter which is a path to a file. An optional "force" parameter can force the file to be updated each time ansible runs.
+
+```yaml
+mysql_databases: []
+```
+
+The MySQL databases to create. A database has the values `name`, `encoding` (defaults to `utf8`), `collation` (defaults to `utf8_general_ci`) and `replicate` (defaults to `1`, only used if replication is configured). The formats of these are the same as in the `mysql_db` module.
+
+You can also delete a database (or ensure it's not on the server) by setting `state` to `absent` (defaults to `present`).
+
+```yaml
+mysql_users: []
+```
+
+The MySQL users and their privileges. A user has the values:
+
+  - `name`
+  - `host` (defaults to `localhost`)
+  - `password` (can be plaintext or encrypted—if encrypted, set `encrypted: yes`)
+  - `encrypted` (defaults to `no`)
+  - `priv` (defaults to `*.*:USAGE`)
+  - `append_privs` (defaults to `no`)
+  - `state`  (defaults to `present`)
+
+The formats of these are the same as in the `mysql_user` module.
+
+```yaml
+mysql_packages:
+  - mysql
+  - mysql-server
+```
+
+(OS-specific, RedHat/CentOS defaults listed here) Packages to be installed. In some situations, you may need to add additional packages, like `mysql-devel`.
+
+```yaml
+mysql_enablerepo: ""
+```
+
+(RedHat/CentOS only) If you have enabled any additional repositories (might I suggest geerlingguy.repo-epel or geerlingguy.repo-remi), those repositories can be listed under this variable (e.g. `remi,epel`). This can be handy, as an example, if you want to install later versions of MySQL.
+
+```yaml
+mysql_python_package_debian: python3-mysqldb
+```
+
+(Ubuntu/Debian only) If you need to explicitly override the MySQL Python package, you can set it here. Set this to `python-mysqldb` if using older distributions running Python 2.
+
+```yaml
+mysql_port: "3306"
+mysql_bind_address: '0.0.0.0'
+mysql_datadir: /var/lib/mysql
+mysql_socket: *default value depends on OS*
+mysql_pid_file: *default value depends on OS*
+```
+
+Default MySQL connection configuration.
+
+```yaml
+mysql_log_file_group: mysql *adm on Debian*
+mysql_log: ""
+mysql_log_error: *default value depends on OS*
+mysql_syslog_tag: *default value depends on OS*
+```yaml
+
+MySQL logging configuration. Setting `mysql_log` (the general query log) or `mysql_log_error` to `syslog` will make MySQL log to syslog using the `mysql_syslog_tag`.
+
+```yaml
+mysql_slow_query_log_enabled: false
+mysql_slow_query_log_file: *default value depends on OS*
+mysql_slow_query_time: 2
+```
+
+Slow query log settings. Note that the log file will be created by this role, but if you're running on a server with SELinux or AppArmor, you may need to add this path to the allowed paths for MySQL, or disable the mysql profile. For example, on Debian/Ubuntu, you can run `sudo ln -s /etc/apparmor.d/usr.sbin.mysqld /etc/apparmor.d/disable/usr.sbin.mysqld && sudo service apparmor restart`.
+
+```yaml
+mysql_key_buffer_size: "256M"
+mysql_max_allowed_packet: "64M"
+mysql_table_open_cache: "256"
+...
+```
+
+The rest of the settings in `defaults/main.yml` control MySQL's memory usage and some other common settings. The default values are tuned for a server where MySQL can consume 512 MB RAM, so you should consider adjusting them to suit your particular server better.
+
+```yaml
+mysql_server_id: "1"
+mysql_max_binlog_size: "100M"
+mysql_binlog_format: "ROW"
+mysql_expire_logs_days: "10"
+mysql_replication_role: ''
+mysql_replication_master: ''
+mysql_replication_user: {}
+```
+
+Replication settings. Set `mysql_server_id` and `mysql_replication_role` by server (e.g. the master would be ID `1`, with the `mysql_replication_role` of `master`, and the slave would be ID `2`, with the `mysql_replication_role` of `slave`). The `mysql_replication_user` uses the same keys as individual list items in `mysql_users`, and is created on master servers, and used to replicate on all the slaves.
+
+`mysql_replication_master` needs to resolve to an IP or a hostname which is accessable to the Slaves (this could be a `/etc/hosts` injection or some other means), otherwise the slaves cannot communicate to the master.
+
+### Later versions of MySQL on CentOS 7
+
+If you want to install MySQL from the official repository instead of installing the system default MariaDB equivalents, you can add the following `pre_tasks` task in your playbook:
+
+```yaml
+  pre_tasks:
+    - name: Install the MySQL repo.
+      yum:
+        name: http://repo.mysql.com/mysql-community-release-el7-5.noarch.rpm
+        state: present
+      when: ansible_os_family == "RedHat"
+  
+    - name: Override variables for MySQL (RedHat).
+      set_fact:
+        mysql_daemon: mysqld
+        mysql_packages: ['mysql-server']
+        mysql_log_error: /var/log/mysqld.err
+        mysql_syslog_tag: mysqld
+        mysql_pid_file: /var/run/mysqld/mysqld.pid
+        mysql_socket: /var/lib/mysql/mysql.sock
+      when: ansible_os_family == "RedHat"
+```
+
+### MariaDB usage
+
+This role works with either MySQL or a compatible version of MariaDB. On RHEL/CentOS 7+, the mariadb database engine was substituted as the default MySQL replacement package. No modifications are necessary though all of the variables still reference 'mysql' instead of mariadb.
+
+#### Ubuntu 14.04 and 16.04 MariaDB configuration
+
+On Ubuntu, the package names are named differently, so the `mysql_package` variable needs to be altered. Set the following variables (at a minimum):
+
+    mysql_packages:
+      - mariadb-client
+      - mariadb-server
+      - python-mysqldb
+
+## Dependencies
+
+None.
+
+## Example Playbook
+
+    - hosts: db-servers
+      become: yes
+      vars_files:
+        - vars/main.yml
+      roles:
+        - { role: geerlingguy.mysql }
+
+*Inside `vars/main.yml`*:
+
+    mysql_root_password: super-secure-password
+    mysql_databases:
+      - name: example_db
+        encoding: latin1
+        collation: latin1_general_ci
+    mysql_users:
+      - name: example_user
+        host: "%"
+        password: similarly-secure-password
+        priv: "example_db.*:ALL"
 
 ## License
 
-![Apache 2.0 License](https://img.shields.io/hexpm/l/plug.svg)
+MIT / BSD
 
-This project is licensed under the [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0) license - see the [LICENSE](LICENSE) file for details.
+## Author Information
 
-## Contributing
-
-Please read [CONTRIBUTING.md](.github/CONTRIBUTING.md) for details on our code of conduct, and the process for submitting pull requests to us.
+This role was created in 2014 by [Jeff Geerling](https://www.jeffgeerling.com/), author of [Ansible for DevOps](https://www.ansiblefordevops.com/).

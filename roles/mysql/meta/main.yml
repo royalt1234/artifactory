@@ -1,18 +1,31 @@
 ---
+dependencies: []
 
 galaxy_info:
-  role_name: mysql_role
-  author: idealista
-  company: Idealista S.A.U.
-  description: MySQL server installation role
-  min_ansible_version: 2.4.3.0
-  license: Apache 2.0
+  role_name: mysql
+  author: geerlingguy
+  description: MySQL server for RHEL/CentOS and Debian/Ubuntu.
+  company: "Midwestern Mac, LLC"
+  license: "license (BSD, MIT)"
+  min_ansible_version: 2.4
   platforms:
+    - name: EL
+      versions:
+        - 7
+        - 8
+        - 9
+    - name: Ubuntu
+      versions:
+        - all
     - name: Debian
       versions:
-        - buster
-        - bullseye
+        - all
+    - name: Archlinux
+      versions:
+        - all
   galaxy_tags:
     - database
     - mysql
     - mariadb
+    - db
+    - sql
