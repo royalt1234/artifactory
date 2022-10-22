@@ -6,10 +6,17 @@ pipeline {
     }
 
     parameters {
-        string(name: 'inventory', defaultValue: 'dev', description: 'This is where you chose your inventory')
+        string(name: 'inventory', defaultValue: 'uat', description: 'This is where you chose your inventory')
     }
 
     stages {
+        stage('initial cleanup') {
+            steps {
+                dir("${WORKSPACE}") {
+                    deleteDir()
+                }
+            }
+        }
         stage('GIT SCM') {
             steps {
                 git branch: 'master', url: 'https://github.com/royalt1234/artifactory.git'
@@ -28,7 +35,7 @@ pipeline {
         }
         stage('Clean Workspace') {
             steps {
-                CleanWS()
+                cleanWS()
             }
         }
     }
