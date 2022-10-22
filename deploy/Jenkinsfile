@@ -10,13 +10,6 @@ pipeline {
     }
 
     stages {
-        stage('initial cleanup') {
-            steps {
-                dir("$WORKSPACE") {
-                    DeleteDir()
-                }
-            }
-        }
         stage('GIT SCM') {
             steps {
                 git branch: 'master', url: 'https://github.com/royalt1234/artifactory.git'
