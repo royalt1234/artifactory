@@ -24,5 +24,15 @@ pipeline {
                 sh'echo "this is the test stage"'
             }
         }
+        stage('package') {
+            steps {
+                sh'echo "this is a package stage"'
+            }
+        }
+        stage('deploy') {
+            steps {
+                sh'echo "this is a deploy stage"'
+            }
+        }
     }
 }
