@@ -1,44 +1,66 @@
 ---
+# tasks file for artifactory
 
-- name: 'installing JFrog Artifactory'
-  include: install.yml
+- name: import assert.yml
+  ansible.builtin.import_tasks: assert.yml
+  run_once: yes
+  delegate_to: localhost
 
-- name: 'setup smoke tests'
-  include: goss.yml
-  tags:
-    - goss
+- name: install yum repository
+  ansible.builtin.get_url:
+    url: "https://bintray.com/jfrog/artifactory-rpms/rpm"
+    dest: /etc/yum.repos.d/bintray-jfrog-artifactory-rpms.repo
+  when:
+    - ansible_pkg_mgr in [ "dnf", "yum" ]
 
-# Storage configuration
-- name: 'ensure storage properties configuration is present'
-  template:
-    src: storage.properties
-    dest: "{{ artifactory_home }}/etc/storage.properties"
-    owner: "{{ artifactory_username }}"
-    group: "{{ artifactory_username }}"
-    mode: 0600
+- name: configure apt repository
+  block:
+    - name: trust gpg key
+      ansible.builtin.apt_key:
+        url: "https://api.bintray.com/orgs/jfrog/keys/gpg/public.key"
+        state: present
+        validate_certs: no
 
-- name: 'configure derby'
-  include: derby.yml
-  tags:
-    - derby
+    - name: install deb repository
+      ansible.builtin.apt_repository:
+        repo: "deb https://jfrog.bintray.com/artifactory-debs {{ ansible_distribution_release | lower }} main"
+        state: present
+  when:
+    - ansible_pkg_mgr in [ "apt" ]
 
-# Database configuration
-- name: 'ensure storage properties configuration is present'
-  template:
-    src: db.properties
-    dest: "{{ artifactory_home }}/etc/db.properties"
-    owner: "{{ artifactory_username }}"
-    group: "{{ artifactory_username }}"
-    mode: 0600
+- name: install package
+  ansible.builtin.package:
+    name: jfrog-artifactory-{{ artifactory_flavour }}
+    state: present
 
-- name: 'configure postgres database'
-  include: postgresql.yml
-  when: artifactory_database == 'postgresql'
-  tags:
-    - postgres
+- name: ensure artifactory_file_store_dir exists
+  ansible.builtin.file:
+    path: "{{ artifactory_file_store_dir }}"
+    state: directory
+    mode: "0755"
+    owner: artifactory
+    group: artifactory
 
-- name: 'configure mysql database'
-  include: mysql.yml
-  when: artifactory_database == 'mysql'
-  tags:
-    - mysql
+- name: configure artifactory
+  ansible.builtin.template:
+    src: binarystore.xml.j2
+    dest: "{{ artifactory_home }}/binarystore.xml"
+    mode: "0644"
+    owner: artifactory
+    group: artifactory
+  notify:
+    - restart artifactory
+
+- name: set ownership for artifactory_logs
+  ansible.builtin.file:
+    path: "{{ artifactory_logs }}"
+    state: directory
+    mode: "0755"
+    owner: artifactory
+    group: artifactory
+
+- name: start and enable artifactory
+  ansible.builtin.service:
+    name: artifactory
+    state: started
+    enabled: yes
