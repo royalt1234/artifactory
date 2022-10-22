@@ -1,0 +1,18 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('testing work') {
+            steps {
+                script  {
+                    sh'echo "testing stage"'
+                }
+            }
+        }
+        stage('all works') {
+            steps {
+                sh'echo "more testing ongoing"'
+            }
+        }
+    }
+}
