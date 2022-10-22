@@ -1,2 +1,11 @@
 [nginx]
 172.31.93.51 ansible_ssh_user='ubuntu' 
+
+[db]
+172.31.27.5 ansible_ssh_user='ubuntu'
+
+[artifactory]
+172.31.18.169 ansible_ssh_user='ubuntu'
+
+[sonarqube]
+172.31.29.193 ansible_ssh_user='ubuntu'

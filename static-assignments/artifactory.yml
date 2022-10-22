@@ -1,0 +1,5 @@
+---
+- name: install artifactory role
+  hosts: artifactory
+  roles:
+    - artifactory

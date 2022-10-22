@@ -1,6 +1,14 @@
 ---
-- hosts: nginx
-- name: install nginx
-  import_playbook: ../static-assignments/nginx.yml
+# - hosts: nginx
+# - name: install nginx
+#   import_playbook: ../static-assignments/nginx.yml
+
+- hosts: artifactory
+- name: install dockpack.base_java8
+  import_playbook: ../static-assignments/dockpack.base_java8.yml
+
+- hosts: artifactory
+- name: install artifactory
+  import_playbook: ../static-assignments/artifactory.yml
 
 
