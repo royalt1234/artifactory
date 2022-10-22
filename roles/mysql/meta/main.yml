@@ -1,0 +1,18 @@
+---
+
+galaxy_info:
+  role_name: mysql_role
+  author: idealista
+  company: Idealista S.A.U.
+  description: MySQL server installation role
+  min_ansible_version: 2.4.3.0
+  license: Apache 2.0
+  platforms:
+    - name: Debian
+      versions:
+        - buster
+        - bullseye
+  galaxy_tags:
+    - database
+    - mysql
+    - mariadb

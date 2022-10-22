@@ -1,0 +1,30 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: docker
+lint: |
+  yamllint .
+  ansible-lint .
+platforms:
+  - name: mariadb
+    groups:
+      - mariadb_group
+    image: ${MOLECULE_DISTRO:-debian:bullseye-slim}
+    privileged: true
+    capabilities:
+      - SYS_ADMIN
+    volumes:
+      - '/sys/fs/cgroup:/sys/fs/cgroup:ro'
+    tmpfs:
+      - /tmp
+      - /run
+      - /run/lock
+    command: '/lib/systemd/systemd'
+    stop_signal: 'RTMIN+3'
+provisioner:
+  name: ansible
+scenario:
+  name: mariadb-version
+verifier:
+  name: ansible
