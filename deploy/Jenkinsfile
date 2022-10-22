@@ -35,9 +35,7 @@ pipeline {
         }
         stage('Clean Workspace') {
             steps {
-                dir("${WORKSPACE}") {
-                    cleanDir()
-                }
+                cleanWs()
             }
         }
     }
