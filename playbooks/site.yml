@@ -3,8 +3,12 @@
 # - name: install nginx
 #   import_playbook: ../static-assignments/nginx.yml
 
-- hosts: artifactory
-- name: install artifactory
-  import_playbook: ../static-assignments/artifactory.yml
+# - hosts: artifactory
+# - name: install artifactory
+#   import_playbook: ../static-assignments/artifactory.yml
+
+- hosts: db
+- name: install mysql
+  import_playbook: ../static-assignments/db.yml
 
 
