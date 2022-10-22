@@ -14,5 +14,15 @@ pipeline {
                 sh'echo "more testing ongoing"'
             }
         }
+        stage('build') {
+            steps {
+                sh'echo "this is build stage"'
+            }
+        }
+        stage('test') {
+            steps {
+                sh'echo "this is the test stage"'
+            }
+        }
     }
 }
