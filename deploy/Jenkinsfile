@@ -1,37 +1,41 @@
 pipeline {
-    agent any
+    agent any 
+
+    environment {
+        ANSIBLE_CONFIG="${WORKSPACE}/deploy/ansible.cfg"
+    }
+
+    parameters {
+        string(name: 'inventory', defaultValue: 'dev', description: 'This is where you chose your inventory')
+    }
 
     stages {
-        stage('testing work') {
+        stage('initial cleanup') {
             steps {
-                script  {
-                    sh'echo "testing stage"'
+                dir("$WORKSPACE") {
+                    DeleteDir()
                 }
             }
         }
-        stage('all works') {
+        stage('GIT SCM') {
             steps {
-                sh'echo "more testing ongoing"'
+                git branch: 'master', url: 'https://github.com/royalt1234/artifactory.git'
             }
         }
-        stage('build') {
+        stage('prepare ansible for execution') {
             steps {
-                sh'echo "this is build stage"'
+                sh 'echo ${WORKSPACE}'
+                sh 'sed -i "3 a roles_path=${WORKSPACE}/roles" "${WORKSPACE}/deploy/ansible.cfg"'
             }
         }
-        stage('test') {
+        stage('Run Ansible') {
             steps {
-                sh'echo "this is the test stage"'
+                ansiblePlaybook become: true, colorized: true, credentialsId: 'ssh-keys-ansible', disableHostKeyChecking: true, installation: 'ansible', inventory: 'inventory/${inventory}', playbook: 'playbooks/site.yml'
             }
         }
-        stage('package') {
+        stage('Clean Workspace') {
             steps {
-                sh'echo "this is a package stage"'
-            }
-        }
-        stage('deploy') {
-            steps {
-                sh'echo "this is a deploy stage"'
+                CleanWS()
             }
         }
     }
