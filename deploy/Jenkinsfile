@@ -6,7 +6,7 @@ pipeline {
     }
 
     parameters {
-        string(name: 'inventory', defaultValue: 'uat', description: 'This is where you chose your inventory')
+        string(name: 'env', defaultValue: 'uat', description: 'This is where you chose your inventory')
     }
 
     stages {
