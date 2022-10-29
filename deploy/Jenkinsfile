@@ -30,7 +30,7 @@ pipeline {
         }
         stage('Run Ansible') {
             steps {
-                ansiblePlaybook become: true, colorized: true, credentialsId: 'ssh-keys-ansible', disableHostKeyChecking: true, installation: 'ansible', inventory: 'inventory/${inventory}', playbook: 'playbooks/site.yml'
+                ansiblePlaybook become: true, colorized: true, credentialsId: 'ssh-keys-ansible', disableHostKeyChecking: true, installation: 'ansible', inventory: 'inventory/${env}', playbook: 'playbooks/site.yml'
             }
         }
         stage('Clean Workspace') {
