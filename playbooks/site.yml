@@ -7,8 +7,12 @@
 # - name: install artifactory
 #   import_playbook: ../static-assignments/artifactory.yml
 
-- hosts: db
-- name: install mysql
-  import_playbook: ../static-assignments/db.yml
+# - hosts: db
+# - name: install mysql
+#   import_playbook: ../static-assignments/db.yml
+
+- hosts: todo
+- name: deployment of todo
+  import_playbook: ../static-assignments/deployment.yml
 
 
